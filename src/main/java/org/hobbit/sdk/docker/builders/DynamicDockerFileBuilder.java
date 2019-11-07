@@ -2,7 +2,6 @@ package org.hobbit.sdk.docker.builders;
 
 import org.hobbit.sdk.docker.BuildBasedDockerizer;
 
-import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,10 +100,11 @@ public class DynamicDockerFileBuilder extends BuildBasedDockersBuilder {
             }
 
             Path sourcePath = destPathRel;
+            String sourcePathString = sourcePath.toString();
             String destPath = dockerWorkDir.resolve(destPathRel).toString();
 
             if(sourcePath.toFile().isDirectory()){
-                sourcePath = sourcePath.resolve("*");
+                sourcePathString = sourcePath.toString() + "/*";
                 destPath+="/";
             }else {
                 if(sourcePath.getParent()!=null)
@@ -112,20 +112,23 @@ public class DynamicDockerFileBuilder extends BuildBasedDockersBuilder {
                 else
                     destPath = dockerWorkDir.toString();
             }
-            datasetsStr += "ADD ./" + sourcePath + " " + destPath + "\n";
+            String destPathString = destPath.toString().replace("\\", "/");
+            datasetsStr += "ADD ./" + sourcePathString + " " + destPathString + "\n";
         }
 
         Path jarPathRel = jarFilePath;
         if(jarPathRel.isAbsolute())
             jarPathRel = getBuildDirectory().relativize(jarFilePath);
+        String jarPathRelString = jarPathRel.toString().replace("\\", "/");
+        String dockerWorkDirString = dockerWorkDir.toString().replace("\\", "/");
 
         String content =
                 "FROM java\n" +
-                        "RUN mkdir -p "+ dockerWorkDir +"\n" +
-                        "WORKDIR "+ dockerWorkDir +"\n" +
-                         datasetsStr+
-                        "ADD "+ jarPathRel +" "+ dockerWorkDir +"\n" +
-                        "CMD java -cp "+ jarPathRel.getFileName() +" "+ String.join(" ", classNames) +"\n"
+                        "RUN mkdir -p "+ dockerWorkDirString +"\n" +
+                        "WORKDIR "+ dockerWorkDirString +"\n" +
+                         datasetsStr.replace("\\", "/") +
+                        "ADD "+ jarPathRelString +" "+ dockerWorkDirString +"\n" +
+                        "CMD java -cp "+ jarPathRel.getFileName().toString() +" "+ String.join(" ", classNames) +"\n"
                         //"CMD [\"java\", \"-cp\", \""+ jarPathRel.getFileName() +"\", "+ String.join(",", classNames) +"]\n"
                         //"CMD [\"java\", \"-cp\", \""+ jarFilePath +"\", \""+runnerClass.getCanonicalName()+"\"]\n"
                 ;

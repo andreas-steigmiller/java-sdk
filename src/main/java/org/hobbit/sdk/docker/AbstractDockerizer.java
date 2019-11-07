@@ -367,7 +367,8 @@ public abstract class AbstractDockerizer implements Component {
 
         String folder = (System.getenv().containsKey(HOBBIT_SESSION_ID_KEY)? System.getenv(HOBBIT_SESSION_ID_KEY):"java_sdk");
 
-        Path destFolderPath = Paths.get("/tmp", folder);
+//        Path destFolderPath = Paths.get("/tmp", folder);
+        Path destFolderPath = Files.createTempDirectory(folder);
         if(!Files.exists(destFolderPath)) {
             Files.createDirectory(destFolderPath);
         }
